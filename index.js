@@ -1,43 +1,100 @@
 const express = require('express')
 const mongoose = require('mongoose');
+const validator = require('validator');
+const bodyParser = require('body-parser')
 const app = express()
 const cors = require('cors')
 require('dotenv').config()
 
 /*Set up mongoose connection */
-mongoose.connect(<Your URI>, { useNewUrlParser: true, useUnifiedTopology: true });
-
-
+const dbUrl = process.env.MONGOOSE_URI;
+mongoose.connect(dbUrl);
 
 app.use(cors())
+app.use(bodyParser.urlencoded({extended: false}))
 app.use(express.static('public'))
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
 
-
 /*
-
-
   Setup mangodb here
 */
+const exerciseEntrySchema = new mongoose.Schema({
+  description: {
+    type: String,
+    required: true
+  },
+  duration: {
+    type: Number,
+    required: true
+  },
+  date: {
+    type: Date
+  }
+})
+
+const exerciseSchema = new mongoose.Schema({
+  username: {
+    type: String, 
+    required: true
+  },
+  log: [exerciseEntrySchema]
+})
+
+
+/*Define instnance method to manipulate the exercise log within the exerciseSchema*/
+
+
+
+let Exercise = mongoose.model('Exercise', exerciseSchema);
+
 
 app.post('/api/users', (req, res) => { 
+  console.log("TEST")
+
   /*2. You can POST to /api/users with form data username to create a new user.*/
   /*3. The returned response from POST /api/users with form data username will be an object with username and _id properties.*/
-  res.send("posted!")
+  //test post
+  console.log(req.body)
+  let user = new Exercise({ 
+    username: req.body.username
+  })
+  user
+  .save()
+  .then((doc) => {
+    res.send(doc);
+  })
+  .catch((err) => {
+    res.send(err);
+  });
 })
 
 app.get("/api/users", (req, res)=>{
   /*4. You can make a GET request to /api/users to get a list of all users.*/
   /*5. The GET request to /api/users returns an array.*/
   /*6. Each element in the array returned from GET /api/users is an object literal containing a user's username and _id.*/
-  res.send("gotten!")
+  console.log("TEST")
+  Exercise.find()
+  .exec()
+  .then((docs)=>{
+    console.log(docs)
+    res.send(docs)
+
+  }
+  )
+  .catch((err)=>{
+    console.log(err)
+    res.send(err)
+  }
+  )
+  
 })
 
 app.post("/api/users/:_id/exercises", (req, res)=>{
   /*7. You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used.*/
   /* 8. The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added.*/
+  console.log(req.body)
   res.send("exercise endpoint")
 })
 
