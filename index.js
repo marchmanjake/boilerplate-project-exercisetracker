@@ -20,31 +20,16 @@ app.get('/', (req, res) => {
 /*
   Setup mangodb here
 */
-const exerciseEntrySchema = new mongoose.Schema({
-  description: {
-    type: String,
-    required: true
-  },
-  duration: {
-    type: Number,
-    required: true
-  },
-  date: {
-    type: Date
-  }
-})
+/*
+
 
 const exerciseSchema = new mongoose.Schema({
   username: {
     type: String, 
     required: true
   },
-  log: [exerciseEntrySchema]
+  log: []
 })
-
-
-/*Define instnance method to manipulate the exercise log within the exerciseSchema*/
-
 
 
 let Exercise = mongoose.model('Exercise', exerciseSchema);
@@ -94,9 +79,39 @@ app.get("/api/users", (req, res)=>{
 app.post("/api/users/:_id/exercises", (req, res)=>{
   /*7. You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used.*/
   /* 8. The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added.*/
+
   console.log(req.body)
-  res.send("exercise endpoint")
-})
+  console.log(req.params._id)
+  //format date
+  
+  if (req.params.date !==null){
+    let submittedDate = new Date(req.params.date.split[0], req.params.date.split[1], req.params.date.split[2]);
+    console.log(submittedDate)
+  } 
+  else{
+
+  }
+
+
+  Exercise.findById(req.params._id)
+    .then((doc)=>{
+      console.log(doc)
+      doc.log.push({
+        description: req.body.description,
+        duration: req.body.duration,
+        date: req.body.date
+      })
+      doc.save()
+        .then((savedDoc)=>{res.send(savedDoc)})
+        .catch((err)=>{res.send("Failed Save")})
+
+      
+      })
+    .catch((err)=>{
+      console.log(err)
+        res.send("Failed Post")
+      })
+  })
 
 app.get("/api/users/:_id/logs", (req, res)=>{
   /* 9. You can make a GET request to /api/users/:_id/logs to retrieve a full exercise log of any user. */
