@@ -20,7 +20,6 @@ app.get('/', (req, res) => {
 /*
   Setup mangodb here
 */
-/*
 
 
 const exerciseSchema = new mongoose.Schema({
@@ -82,16 +81,24 @@ app.post("/api/users/:_id/exercises", (req, res)=>{
 
   console.log(req.body)
   console.log(req.params._id)
-  //format date
+  let submittedDate;
+
+  console.log("test")
+  console.log(new Date())
   
-  if (req.params.date !==null){
-    let submittedDate = new Date(req.params.date.split[0], req.params.date.split[1], req.params.date.split[2]);
+
+  if (req.body.date){
+    console.log("not null date")
+    console.log(req.body.date)
+    submittedDate = new Date(req.body.date.split("-")[0], req.body.date.split("-")[1], req.body.date.split("-")[2]);
     console.log(submittedDate)
   } 
   else{
-
+    submittedDate = new Date()
+    console.log(submittedDate)
   }
 
+  console.log(submittedDate.toDateString())
 
   Exercise.findById(req.params._id)
     .then((doc)=>{
@@ -99,10 +106,20 @@ app.post("/api/users/:_id/exercises", (req, res)=>{
       doc.log.push({
         description: req.body.description,
         duration: req.body.duration,
-        date: req.body.date
+        date: submittedDate.toDateString()
       })
       doc.save()
-        .then((savedDoc)=>{res.send(savedDoc)})
+        .then((savedDoc)=>{
+          let returnObj = {
+            username: savedDoc.username,
+            count: savedDoc.log.length,
+            _id: savedDoc._id.toString(),
+            log: savedDoc.log,
+          }
+          console.log("return!")
+          console.log(returnObj)
+          res.json(returnObj)
+        })
         .catch((err)=>{res.send("Failed Save")})
 
       
