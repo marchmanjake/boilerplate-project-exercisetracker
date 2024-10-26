@@ -20,8 +20,6 @@ app.get('/', (req, res) => {
 /*
   Setup mangodb here
 */
-
-
 const exerciseSchema = new mongoose.Schema({
   username: {
     type: String, 
@@ -58,17 +56,14 @@ app.get("/api/users", (req, res)=>{
   /*4. You can make a GET request to /api/users to get a list of all users.*/
   /*5. The GET request to /api/users returns an array.*/
   /*6. Each element in the array returned from GET /api/users is an object literal containing a user's username and _id.*/
-  console.log("TEST")
   Exercise.find()
   .exec()
   .then((docs)=>{
-    console.log(docs)
     res.send(docs)
 
   }
   )
   .catch((err)=>{
-    console.log(err)
     res.send(err)
   }
   )
@@ -79,30 +74,20 @@ app.post("/api/users/:_id/exercises", (req, res)=>{
   /*7. You can POST to /api/users/:_id/exercises with form data description, duration, and optionally date. If no date is supplied, the current date will be used.*/
   /* 8. The response returned from POST /api/users/:_id/exercises will be the user object with the exercise fields added.*/
 
-  console.log(req.body)
-  console.log(req.params._id)
   let submittedDate;
 
-  console.log("test")
-  console.log(new Date())
   
 
   if (req.body.date){
-    console.log("not null date")
-    console.log(req.body.date)
     submittedDate = new Date(req.body.date.split("-")[0], (req.body.date.split("-")[1]-1), req.body.date.split("-")[2]);
-    console.log(submittedDate)
   } 
   else{
     submittedDate = new Date()
-    console.log(submittedDate)
-  }
 
-  console.log(submittedDate.toDateString())
+  }
 
   Exercise.findById(req.params._id)
     .then((doc)=>{
-      console.log(doc)
       doc.log.push({
         description: req.body.description,
         duration: parseInt(req.body.duration),
@@ -117,8 +102,6 @@ app.post("/api/users/:_id/exercises", (req, res)=>{
             date: submittedDate.toDateString(),
             _id: savedDoc._id.toString(),
           }
-          console.log("return!")
-          console.log(returnObj)
           res.json(returnObj)
         })
         .catch((err)=>{res.send("Failed Save")})
@@ -126,7 +109,6 @@ app.post("/api/users/:_id/exercises", (req, res)=>{
       
       })
     .catch((err)=>{
-      console.log(err)
         res.send("Failed Post")
       })
   })
@@ -140,22 +122,39 @@ app.get("/api/users/:_id/logs", (req, res)=>{
   /*14. The duration property of any object in the log array that is returned from GET /api/users/:_id/logs should be a number.*/
   /* 15. The date property of any object in the log array that is returned from GET /api/users/:_id/logs should be a string. Use the dateString format of the Date API.*/
   /* 16. You can add from, to and limit parameters to a GET /api/users/:_id/logs request to retrieve part of the log of any user. from and to are dates in yyyy-mm-dd format. limit is an integer of how many logs to send back. */
-  console.log(req.params._id)
-  console.log(req.query)
+
   Exercise.findById(req.params._id)
   .then((doc)=>{
-    console.log(doc)
+    //perform filtering by dates
+    let filteredLog = doc.log;
+
+    //filter out from
+    if(req.query.from){
+      filteredLog = filteredLog.filter((exercise)=>Date.parse(exercise.date)>=Date.parse(req.query.from))
+    } 
+
+    //filter out too
+    if(req.query.to){
+      filteredLog = filteredLog.filter((exercise)=>Date.parse(exercise.date)<=Date.parse(req.query.to))
+    } 
+
+
+    //perform limiting
+    if(req.query.limit){
+      filteredLog = filteredLog.slice(0,parseInt(req.query.limit))
+    }
+
+
     res.json(
       {
         username: doc.username,
         count: doc.log.length,
         _id: doc._id,
-        log: doc.log
+        log: filteredLog
       }
     )
   })
   .catch((err)=>{
-    console.log("Log not found")
     res.send("failed")
 
   })
