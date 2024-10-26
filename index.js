@@ -90,7 +90,7 @@ app.post("/api/users/:_id/exercises", (req, res)=>{
   if (req.body.date){
     console.log("not null date")
     console.log(req.body.date)
-    submittedDate = new Date(req.body.date.split("-")[0], req.body.date.split("-")[1], req.body.date.split("-")[2]);
+    submittedDate = new Date(req.body.date.split("-")[0], (req.body.date.split("-")[1]-1), req.body.date.split("-")[2]);
     console.log(submittedDate)
   } 
   else{
@@ -105,16 +105,17 @@ app.post("/api/users/:_id/exercises", (req, res)=>{
       console.log(doc)
       doc.log.push({
         description: req.body.description,
-        duration: req.body.duration,
+        duration: parseInt(req.body.duration),
         date: submittedDate.toDateString()
       })
       doc.save()
         .then((savedDoc)=>{
           let returnObj = {
             username: savedDoc.username,
-            count: savedDoc.log.length,
+            description: req.body.description,
+            duration: parseInt(req.body.duration),
+            date: submittedDate.toDateString(),
             _id: savedDoc._id.toString(),
-            log: savedDoc.log,
           }
           console.log("return!")
           console.log(returnObj)
@@ -139,12 +140,26 @@ app.get("/api/users/:_id/logs", (req, res)=>{
   /*14. The duration property of any object in the log array that is returned from GET /api/users/:_id/logs should be a number.*/
   /* 15. The date property of any object in the log array that is returned from GET /api/users/:_id/logs should be a string. Use the dateString format of the Date API.*/
   /* 16. You can add from, to and limit parameters to a GET /api/users/:_id/logs request to retrieve part of the log of any user. from and to are dates in yyyy-mm-dd format. limit is an integer of how many logs to send back. */
-  
+  console.log(req.params._id)
+  console.log(req.query)
+  Exercise.findById(req.params._id)
+  .then((doc)=>{
+    console.log(doc)
+    res.json(
+      {
+        username: doc.username,
+        count: doc.log.length,
+        _id: doc._id,
+        log: doc.log
+      }
+    )
+  })
+  .catch((err)=>{
+    console.log("Log not found")
+    res.send("failed")
 
-  
-  res.send("id returned")
+  })
 })
-
 
 
 const listener = app.listen(process.env.PORT || 3000, () => {
